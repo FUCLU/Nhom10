@@ -1,0 +1,67 @@
+Please inspect all files in the unittest/ directory and complete the following requirements:
+1. Target Directory:
+   Work inside unittest/ with test_data.py, policy.py, security-requirements.md, and threat-model.md.
+   Read threat-model.md and security-requirements.md first before writing any code.
+2. Context (from threat-model.md):
+   - Actors/roles calling json_search(): "admin" (full access), "operator" (operational
+     fields, e.g. issueSummary, managementIpAddress), "viewer" (public fields only, e.g.
+     issueSummary). Access rules per field are defined in policy.py.
+   - Trust boundary: role must be enforced INSIDE json_search() itself (defense in depth),
+     not only assumed to be filtered by the caller.
+   - This implementation must specifically mitigate threat T4 (Information Disclosure) and
+     T6 (Elevation of Privilege) as described in threat-model.md: a caller must never
+     receive a field's value unless their role is listed in policy.py for that field.
+     Default to deny (return nothing) when role is not authorized for a field.
+3. Function Implementation (recursive_json_search.py):
+   - Implement json_search(key, input_object, role=None) with recursive search logic.
+   - Aggregate results from all nested dicts and lists properly without dropping data
+     (do not lose matches found in recursive calls).
+   - Before including any matched field in the result, check policy.py: only include it
+     if role is in the list of allowed roles for that key. Unknown keys default to
+     no access (deny by default).
+4. Test Suite Implementation (test_json_search.py):
+   - Create test class json_search_test with docstrings inside each test method.
+   - Implement 3 baseline functional tests: test_search_found, test_search_not_found,
+     test_is_a_list. Call json_search() with an authorized role (e.g. role="admin") in
+     these tests so they validate search logic, not access control — this is a regression
+     check to ensure adding the role parameter did not break existing functional behavior.
+   - Implement security tests validating the access rules in policy.py, referencing SR-1
+     in security-requirements.md. Cover ALL entries in policy.py (not just one field):
+     for each field, test at least one authorized role (expects non-empty result) and one
+     unauthorized role (expects empty result).
+5. Self-Verification:
+   - Run: python3 -m unittest -v test_json_search.py
+   - Ensure ALL unit tests and security tests pass successfully.
+   - Report which threats from threat-model.md are addressed by the tests, and which
+     (if any) are explicitly out of scope for this task.
+
+
+
+
+
+Show less
+
+8:13 PM
+
+
+
+
+
+
+Worked for 1m 18s
+
+
+
+Implemented role-aware recursive search and tests in [recursive_json_search.py](/home/kali/Nhom10/git-intro/unittest/recursive_json_search.py) and [test_json_search.py](/home/kali/Nhom10/git-intro/unittest/test_json_search.py). Search aggregates matches in nested dictionaries and lists, and denies access when the role is missing or the key is absent from policy.py.
+The requested command passed from unittest/: 6 tests, OK. Tests cover SR-1 for every policy field, including authorized and unauthorized roles, plus unknown keys and missing roles. They address T4 (Information Disclosure) and T6 (Elevation of Privilege). T1, T2, T3, and T5 are out of scope here: they concern role authentication, policy review, logging, and input limits.
+
+  Edited 2 files+92-2Review changesUndoReview
+
+unittest/recursive_json_search.pyunittest/recursive_json_search.py+32-1
+unittest/test_json_search.pyunittest/test_json_search.py+60-1
+
+
+
+
+
+8:14 PM
